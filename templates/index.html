@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Engine</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #e94560, #00b4d8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #a1cae2;
+            font-size: 1.2rem;
+        }
+        
+        .board-container {
+            flex: 1;
+            min-width: 400px;
+            max-width: 500px;
+            background: #0f3460;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #board {
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            background: #0f3460;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #e94560;
+            border-bottom: 2px solid #533483;
+            padding-bottom: 8px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #e94560;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+            width: calc(50% - 10px);
+        }
+        
+        .btn:hover {
+            background: #ff6b81;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #533483;
+        }
+        
+        .btn-secondary:hover {
+            background: #6a4ca3;
+            box-shadow: 0 5px 15px rgba(83, 52, 131, 0.4);
+        }
+        
+        .btn-engine {
+            background: #00b4d8;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .btn-engine:hover {
+            background: #00c8f0;
+            box-shadow: 0 5px 15px rgba(0, 180, 216, 0.4);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #a1cae2;
+            font-weight: 500;
+        }
+        
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #533483;
+            border-radius: 6px;
+            background: #16213e;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .info-panel {
+            flex: 100%;
+            background: #0f3460;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        #info {
+            min-height: 100px;
+            padding: 15px;
+            background: #16213e;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .status {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #533483;
+            color: #a1cae2;
+        }
+        
+        .move-history {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding: 10px;
+            background: #16213e;
+            border-radius: 8px;
+        }
+        
+        .move-list {
+            list-style: none;
+        }
+        
+        .move-list li {
+            padding: 5px;
+            border-bottom: 1px solid #533483;
+        }
+        
+        .move-list li:nth-child(odd) {
+            background: rgba(83, 52, 131, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .board-container, .controls {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chess-knight"></i> Chess Engine</h1>
+            <p class="subtitle">Play against an AI-powered chess engine</p>
+        </header>
+        
+        <div class="board-container">
+            <div id="board"></div>
+            <div class="status">
+                <span id="turn">White's turn</span>
+                <span id="game-status">Playing</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h2><i class="fas fa-cog"></i> Game Controls</h2>
+                <button class="btn" onclick="newGame()"><i class="fas fa-plus-circle"></i> New Game</button>
+                <button class="btn btn-secondary" onclick="resetBoard()"><i class="fas fa-redo"></i> Reset Board</button>
+                <button class="btn btn-engine" onclick="getEngineMove()"><i class="fas fa-robot"></i> Get Engine Move</button>
+            </div>
+            
+            <div class="control-group">
+                <h2><i class="fas fa-sliders-h"></i> Engine Settings</h2>
+                <div class="form-group">
+                    <label for="depth"><i class="fas fa-layer-group"></i> Search Depth</label>
+                    <input type="number" id="depth" value="3" min="1" max="6">
+                </div>
+                <div class="form-group">
+                    <label for="timeLimit"><i class="fas fa-clock"></i> Time Limit (minutes)</label>
+                    <input type="number" id="timeLimit" value="2" min="1" max="10">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h2><i class="fas fa-history"></i> Move History</h2>
+                <div class="move-history">
+                    <ul class="move-list" id="moveHistory"></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h2><i class="fas fa-info-circle"></i> Game Information</h2>
+            <div id="info">Welcome! Start a new game to begin.</div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize chess.js and chessboard.js
+        var game = new Chess();
+        var board = null;
+        var moveHistory = [];
+        
+        // Chessboard configuration
+        var config = {
+            draggable: true,
+            position: 'start',
+            onDragStart: onDragStart,
+            onDrop: onDrop,
+            onSnapEnd: onSnapEnd,
+            pieceTheme: '/static/img/chesspieces/wikipedia/{piece}.png'
+        };
+        
+        // Initialize the board
+        function initBoard() {
+            board = Chessboard('board', config);
+            updateStatus();
+        }
+        
+        // Start a new game
+        function newGame() {
+            $('#info').html('Starting new game... <i class="fas fa-spinner fa-spin"></i>');
+            
+            $.ajax({
+                url: '/new_game',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({}),
+                success: function(data) {
+                    if (data.success) {
+                        game.load(data.fen);
+                        board.position(data.fen);
+                        moveHistory = [];
+                        updateMoveHistory();
+                        updateStatus();
+                        $('#info').html('New game started. You play as ' + (game.turn() === 'w' ? 'White' : 'Black') + '.');
+                    } else {
+                        $('#info').html('Error: ' + data.error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#info').html('Error starting new game: ' + error);
+                }
+            });
+        }
+        
+        // Reset the board to starting position
+        function resetBoard() {
+            game.reset();
+            board.start();
+            moveHistory = [];
+            updateMoveHistory();
+            updateStatus();
+            $('#info').html('Board reset to starting position.');
+        }
+        
+        // Get engine move
+        function getEngineMove() {
+            var depth = $('#depth').val();
+            var timeLimit = $('#timeLimit').val();
+            
+            $('#info').html('Engine thinking... <i class="fas fa-cog fa-spin"></i>');
+            
+            $.ajax({
+                url: '/get_move',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    depth: depth,
+                    time_limit: timeLimit
+                }),
+                success: function(data) {
+                    if (data.success) {
+                        // Update the game with the FEN from the server
+                        game.load(data.fen);
+                        board.position(game.fen());
+                        
+                        // Convert UCI move to SAN for display
+                        var moveObj = {
+                            from: data.move.substring(0, 2),
+                            to: data.move.substring(2, 4),
+                            promotion: data.move.length > 4 ? data.move.substring(4, 5) : undefined
+                        };
+                        
+                        var sanMove = game.move(moveObj);
+                        var moveText = sanMove ? sanMove.san : data.move;
+                        
+                        // Add to move history
+                        moveHistory.push({player: 'Engine', move: moveText});
+                        updateMoveHistory();
+                        
+                        // Update info panel
+                        $('#info').html(
+                            'Engine played: ' + moveText + 
+                            '<br>Evaluation: ' + data.evaluation.toFixed(2) +
+                            '<br>Time: ' + (data.time / 60).toFixed(2) + ' minutes' +
+                            '<br>Nodes: ' + data.nodes.toLocaleString()
+                        );
+                        
+                        updateStatus();
+                    } else {
+                        $('#info').html('Error: ' + data.error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#info').html('Error getting engine move: ' + error);
+                }
+            });
+        }
+        
+        // Update move history display
+        function updateMoveHistory() {
+            var historyHtml = '';
+            for (var i = 0; i < moveHistory.length; i++) {
+                historyHtml += '<li>' + (i + 1) + '. ' + 
+                              (moveHistory[i].player === 'Player' ? '<strong>' + moveHistory[i].move + '</strong>' : moveHistory[i].move) +
+                              '</li>';
+            }
+            $('#moveHistory').html(historyHtml);
+            // Scroll to bottom
+            $('.move-history').scrollTop($('.move-history')[0].scrollHeight);
+        }
+        
+        // Update game status
+        function updateStatus() {
+            var status = '';
+            var moveColor = game.turn() === 'w' ? 'White' : 'Black';
+            
+            // Checkmate?
+            if (game.in_checkmate()) {
+                status = 'Game over, ' + moveColor + ' is in checkmate.';
+                $('#game-status').html('Checkmate');
+            } 
+            // Draw?
+            else if (game.in_draw()) {
+                status = 'Game over, drawn position';
+                $('#game-status').html('Draw');
+            } 
+            // Game still on
+            else {
+                status = moveColor + ' to move';
+                $('#game-status').html('Playing');
+                
+                // Check?
+                if (game.in_check()) {
+                    status += ', ' + moveColor + ' is in check';
+                    $('#game-status').html('Check');
+                }
+            }
+            
+            $('#turn').html(status);
+        }
+        
+        // Chessboard event handlers
+        function onDragStart(source, piece, position, orientation) {
+            // Only allow moves when it's the player's turn
+            if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+                (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+        
+        function onDrop(source, target) {
+            // See if the move is legal
+            var move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q' // NOTE: always promote to a queen for example simplicity
+            });
+            
+            // Illegal move
+            if (move === null) return 'snapback';
+            
+            // Make the move on the server
+            $.ajax({
+                url: '/make_move',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    move: move.from + move.to + (move.promotion ? move.promotion : '')
+                }),
+                success: function(data) {
+                    if (data.success) {
+                        // Add to move history
+                        moveHistory.push({player: 'Player', move: move.san});
+                        updateMoveHistory();
+                        
+                        game.load(data.fen);
+                        board.position(data.fen);
+                        updateStatus();
+                        $('#info').html('Move made: ' + move.san);
+                    } else {
+                        game.undo();
+                        board.position(game.fen());
+                        $('#info').html('Invalid move: ' + data.error);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    game.undo();
+                    board.position(game.fen());
+                    $('#info').html('Error making move: ' + error);
+                }
+            });
+            
+            updateStatus();
+        }
+        
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+        
+        // Initialize the game when page loads
+        $(document).ready(function() {
+            initBoard();
+            newGame();
+        });
+    </script>
+</body>
+</html>
